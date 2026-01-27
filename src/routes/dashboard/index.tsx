@@ -5,19 +5,22 @@ import {
   ViolationMap,
   ViolationTable,
 } from "@/components/dashboard";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/dashboard/")({
   component: DashboardPage,
 });
 
 function DashboardPage() {
+  const { user } = useAuth();
+
   return (
     <DashboardLayout
       title="Operations Overview"
       headerRight={
         <div className="text-right text-sm">
-          <p className="font-semibold text-[#1a3a5c]">NCRJO-17-558</p>
-          <p className="text-gray-500">Admin ID: 2025-01</p>
+          <p className="font-semibold text-[#1a3a5c]">Username: {user?.username}</p>
+          <p className="text-gray-500">User ID: {user?.id}</p>
         </div>
       }
     >
