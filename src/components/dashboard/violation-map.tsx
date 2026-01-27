@@ -1,92 +1,26 @@
 import { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import L from "leaflet";
+import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-
-// Fix for default marker icons in React-Leaflet
-const defaultIcon = L.icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
-
-const redIcon = L.icon({
-  iconUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
-
-L.Marker.prototype.options.icon = defaultIcon;
-
-interface ViolationMarker {
-  id: string;
-  position: [number, number];
-  location: string;
-  behavior: string;
-  ticketNumber: string;
-  risk: "HIGH" | "HAZARD" | "ROUTINE";
-}
-
-const sampleMarkers: ViolationMarker[] = [
-  {
-    id: "1",
-    position: [14.6282, 121.0355],
-    location: "G. Araneta Ave",
-    behavior: "Reckless Driving",
-    ticketNumber: "22022115",
-    risk: "HIGH",
-  },
-  {
-    id: "2",
-    position: [14.6488, 120.9664],
-    location: "R10 / Navotas",
-    behavior: "Overloading (RA 8794)",
-    ticketNumber: "22158636",
-    risk: "HIGH",
-  },
-  {
-    id: "3",
-    position: [14.6181, 121.0562],
-    location: "EDSA / Cubao",
-    behavior: "Obstructing Traffic",
-    ticketNumber: "21812847",
-    risk: "HAZARD",
-  },
-  {
-    id: "4",
-    position: [14.5565, 120.9822],
-    location: "Roxas Blvd",
-    behavior: "Disregarding Signs",
-    ticketNumber: "22021617",
-    risk: "HIGH",
-  },
-  {
-    id: "5",
-    position: [14.6395, 121.0764],
-    location: "Katipunan Ave",
-    behavior: "Illegal Change Color",
-    ticketNumber: "22159590",
-    risk: "ROUTINE",
-  },
-];
 
 // Metro Manila center
 const MAP_CENTER: [number, number] = [14.5995, 120.9842];
+
+export interface LocationAggregation {
+  key: string;
+  name: string;
+  coords: [number, number];
+  count: number;
+}
+
+interface ViolationMapProps {
+  locations: LocationAggregation[];
+  isLoading?: boolean;
+}
 
 function MapController() {
   const map = useMap();
 
   useEffect(() => {
-    // Invalidate size after mount to fix rendering issues
     const timer = setTimeout(() => {
       map.invalidateSize();
     }, 100);
@@ -96,13 +30,39 @@ function MapController() {
   return null;
 }
 
-export function ViolationMap() {
+function getMarkerRadius(count: number): number {
+  // Scale radius based on count (min 8, max 40)
+  const minRadius = 8;
+  const maxRadius = 40;
+  const scale = Math.log10(count + 1) / 4; // Logarithmic scaling
+  return Math.min(maxRadius, Math.max(minRadius, minRadius + scale * (maxRadius - minRadius)));
+}
+
+function getMarkerColor(count: number): string {
+  // Color based on count intensity
+  if (count >= 1000) return "#dc2626"; // red-600
+  if (count >= 500) return "#ea580c"; // orange-600
+  if (count >= 100) return "#ca8a04"; // yellow-600
+  return "#2563eb"; // blue-600
+}
+
+export function ViolationMap({ locations, isLoading }: ViolationMapProps) {
+  if (isLoading) {
+    return (
+      <div className="flex h-full w-full items-center justify-center rounded-lg bg-gray-100">
+        <div className="text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-[#1a3a5c]" />
+          <p className="mt-2 text-sm text-gray-500">Loading map data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full w-full rounded-lg overflow-hidden">
       <MapContainer
         center={MAP_CENTER}
-        zoom={10}
+        zoom={11}
         className="h-full w-full"
         scrollWheelZoom={true}
       >
@@ -111,26 +71,29 @@ export function ViolationMap() {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {sampleMarkers.map((marker) => (
-          <Marker
-            key={marker.id}
-            position={marker.position}
-            icon={marker.risk === "HIGH" || marker.risk === "HAZARD" ? redIcon : defaultIcon}
+        {locations.map((location) => (
+          <CircleMarker
+            key={location.key}
+            center={location.coords}
+            radius={getMarkerRadius(location.count)}
+            pathOptions={{
+              fillColor: getMarkerColor(location.count),
+              fillOpacity: 0.7,
+              color: "#1a3a5c",
+              weight: 2,
+            }}
           >
             <Popup>
               <div className="text-sm">
-                <p className="font-semibold">{marker.location}</p>
-                <p className="text-gray-600">{marker.behavior}</p>
-                <p className="text-xs text-gray-400">
-                  Ticket: {marker.ticketNumber}
+                <p className="font-semibold text-[#1a3a5c]">{location.name}</p>
+                <p className="text-gray-600">
+                  <span className="font-medium">{location.count.toLocaleString()}</span> violations
                 </p>
               </div>
             </Popup>
-          </Marker>
+          </CircleMarker>
         ))}
       </MapContainer>
     </div>
   );
 }
-
-export { sampleMarkers, type ViolationMarker };
