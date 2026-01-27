@@ -55,7 +55,7 @@ function LoginPage() {
       </div>
 
       {/* Login Card */}
-      <div className="relative z-10 w-full max-w-sm rounded-lg bg-white p-6 shadow-xl">
+      <div className="relative z-10 w-full max-w-sm rounded-lg bg-white px-8 py-10 shadow-xl">
         {/* Logo */}
         <div className="flex justify-center">
           <img
@@ -66,17 +66,17 @@ function LoginPage() {
         </div>
 
         {/* Title */}
-        <div className="mt-4 text-center">
+        <div className="mt-5 text-center">
           <h1 className="text-xl font-bold tracking-tight text-[#1a3a5c] sm:text-2xl">
             TRAFFIC VIOLATION
             <br />
             MONITORING SYSTEM
           </h1>
-          <p className="mt-1 text-sm text-gray-500">NCR OPERATIONS DIVISION</p>
+          <p className="mt-2 text-sm text-gray-500">NCR OPERATIONS DIVISION</p>
         </div>
 
         {/* Form */}
-        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
           {error && (
             <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
               {error}
@@ -164,7 +164,7 @@ function LoginPage() {
         </form>
 
         {/* Footer */}
-        <div className="mt-6 text-center text-xs text-gray-500">
+        <div className="mt-8 text-center text-xs text-gray-500">
           <p>
             <span className="font-semibold text-red-600">
               Restricted Access:
