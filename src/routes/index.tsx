@@ -1,58 +1,202 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useCallback, useState } from "react";
+import { Eye, EyeOff, Loader2, Lock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { login } from "@/lib/api";
+import { AxiosError } from "axios";
 
 export const Route = createFileRoute("/")({
-  component: HomePage,
+  component: LoginPage,
 });
 
-function HomePage() {
-  return (
-    <div className="container mx-auto px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
-      <section className="flex flex-col items-center text-center">
-        <h1 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">
-          Welcome to TVMS
-        </h1>
-        <p className="text-muted-foreground mt-4 max-w-2xl text-base sm:text-lg md:text-xl">
-          A modern, scalable frontend application built with React, TypeScript,
-          and Tailwind CSS.
-        </p>
-        <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-          <Button size="lg">Get Started</Button>
-          <Button variant="outline" size="lg">
-            Learn More
-          </Button>
-        </div>
-      </section>
+function LoginPage() {
+  const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-      <section className="mt-16 grid gap-6 sm:mt-20 sm:grid-cols-2 lg:mt-24 lg:grid-cols-3 lg:gap-8">
-        <FeatureCard
-          title="Type-Safe Routing"
-          description="TanStack Router provides fully type-safe navigation with automatic route generation."
-        />
-        <FeatureCard
-          title="Modern Styling"
-          description="Tailwind CSS v4 with shadcn/ui components for beautiful, responsive interfaces."
-        />
-        <FeatureCard
-          title="Dark Mode"
-          description="Built-in dark mode support with system preference detection."
-        />
-      </section>
-    </div>
+  const togglePassword = useCallback(() => {
+    setShowPassword((prev) => !prev);
+  }, []);
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError("");
+
+      if (!username.trim() || !password) {
+        setError("Please enter username and password");
+        return;
+      }
+
+      setIsLoading(true);
+
+      try {
+        await login(username.trim(), password);
+        navigate({ to: "/dashboard" });
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          setError(err.response?.data?.message || "Login failed");
+        } else {
+          setError("An unexpected error occurred");
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [username, password, navigate]
   );
-}
 
-function FeatureCard({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
   return (
-    <div className="border-border bg-card rounded-lg border p-6 shadow-sm transition-shadow hover:shadow-md">
-      <h3 className="text-card-foreground text-lg font-semibold">{title}</h3>
-      <p className="text-muted-foreground mt-2 text-sm">{description}</p>
+    <div className="relative flex min-h-screen items-center justify-center p-4">
+      {/* Background with overlay */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/bg-traffic.jpeg')" }}
+      >
+        <div className="absolute inset-0 bg-[#1a3a5c]/85" />
+      </div>
+
+      {/* Login Card */}
+      <div className="relative z-10 w-full max-w-sm rounded-lg bg-white px-8 py-10 shadow-xl">
+        {/* Logo */}
+        <div className="flex justify-center">
+          <img
+            src="/lto-logo.jpeg"
+            alt="LTO Logo"
+            className="h-20 w-20 object-contain"
+          />
+        </div>
+
+        {/* Title */}
+        <div className="mt-5 text-center">
+          <h1 className="text-xl font-bold tracking-tight text-[#1a3a5c] sm:text-2xl">
+            TRAFFIC VIOLATION
+            <br />
+            MONITORING SYSTEM
+          </h1>
+          <p className="mt-2 text-sm text-gray-500">NCR OPERATIONS DIVISION</p>
+        </div>
+
+        {/* Form */}
+        <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+          {error && (
+            <div
+              role="alert"
+              className="rounded-md bg-red-50 p-3 text-sm text-red-600"
+            >
+              {error}
+            </div>
+          )}
+
+          {/* Username */}
+          <div className="space-y-2">
+            <label
+              htmlFor="username"
+              className="text-sm font-medium text-gray-700"
+            >
+              Username
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Input
+                id="username"
+                name="username"
+                type="text"
+                placeholder="Enter your username"
+                className="pl-10"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                disabled={isLoading}
+                autoComplete="username"
+              />
+            </div>
+          </div>
+
+          {/* Password */}
+          <div className="space-y-2">
+            <label
+              htmlFor="password"
+              className="text-sm font-medium text-gray-700"
+            >
+              Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                className="pl-10 pr-10"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={togglePassword}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Remember & Forgot */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Checkbox id="remember" disabled={isLoading} />
+              <label htmlFor="remember" className="text-sm text-gray-600">
+                Remember System
+              </label>
+            </div>
+            <button
+              type="button"
+              className="text-sm font-medium text-[#1a3a5c] hover:underline"
+            >
+              Forgot Password?
+            </button>
+          </div>
+
+          {/* Submit */}
+          <Button
+            type="submit"
+            className="w-full cursor-pointer bg-[#1a3a5c] text-white hover:bg-[#152d47]"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              "Access Dashboard"
+            )}
+          </Button>
+        </form>
+
+        {/* Footer */}
+        <footer className="mt-8 text-center text-xs text-gray-500">
+          <p>
+            <span className="font-semibold text-red-600">
+              Restricted Access:
+            </span>{" "}
+            Authorized LTO Personnel Only.
+          </p>
+          <p className="mt-1">System Version 1.0 | &copy; 2025 Arellano University</p>
+        </footer>
+      </div>
     </div>
   );
 }
