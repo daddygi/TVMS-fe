@@ -9,10 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from "./routes/__root"
-import { Route as DashboardRouteImport } from "./routes/dashboard"
+import { Route as DashboardRouteRouteImport } from "./routes/dashboard/route"
 import { Route as IndexRouteImport } from "./routes/index"
+import { Route as DashboardIndexRouteImport } from "./routes/dashboard/index"
+import { Route as DashboardViolationsRouteImport } from "./routes/dashboard/violations"
+import { Route as DashboardSpatialRouteImport } from "./routes/dashboard/spatial"
+import { Route as DashboardOfficersRouteImport } from "./routes/dashboard/officers"
 
-const DashboardRoute = DashboardRouteImport.update({
+const DashboardRouteRoute = DashboardRouteRouteImport.update({
   id: "/dashboard",
   path: "/dashboard",
   getParentRoute: () => rootRouteImport,
@@ -22,31 +26,80 @@ const IndexRoute = IndexRouteImport.update({
   path: "/",
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: "/",
+  path: "/",
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardViolationsRoute = DashboardViolationsRouteImport.update({
+  id: "/violations",
+  path: "/violations",
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardSpatialRoute = DashboardSpatialRouteImport.update({
+  id: "/spatial",
+  path: "/spatial",
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardOfficersRoute = DashboardOfficersRouteImport.update({
+  id: "/officers",
+  path: "/officers",
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
-  "/dashboard": typeof DashboardRoute
+  "/dashboard": typeof DashboardRouteRouteWithChildren
+  "/dashboard/officers": typeof DashboardOfficersRoute
+  "/dashboard/spatial": typeof DashboardSpatialRoute
+  "/dashboard/violations": typeof DashboardViolationsRoute
+  "/dashboard/": typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
-  "/dashboard": typeof DashboardRoute
+  "/dashboard/officers": typeof DashboardOfficersRoute
+  "/dashboard/spatial": typeof DashboardSpatialRoute
+  "/dashboard/violations": typeof DashboardViolationsRoute
+  "/dashboard": typeof DashboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   "/": typeof IndexRoute
-  "/dashboard": typeof DashboardRoute
+  "/dashboard": typeof DashboardRouteRouteWithChildren
+  "/dashboard/officers": typeof DashboardOfficersRoute
+  "/dashboard/spatial": typeof DashboardSpatialRoute
+  "/dashboard/violations": typeof DashboardViolationsRoute
+  "/dashboard/": typeof DashboardIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: "/" | "/dashboard"
+  fullPaths:
+    | "/"
+    | "/dashboard"
+    | "/dashboard/officers"
+    | "/dashboard/spatial"
+    | "/dashboard/violations"
+    | "/dashboard/"
   fileRoutesByTo: FileRoutesByTo
-  to: "/" | "/dashboard"
-  id: "__root__" | "/" | "/dashboard"
+  to:
+    | "/"
+    | "/dashboard/officers"
+    | "/dashboard/spatial"
+    | "/dashboard/violations"
+    | "/dashboard"
+  id:
+    | "__root__"
+    | "/"
+    | "/dashboard"
+    | "/dashboard/officers"
+    | "/dashboard/spatial"
+    | "/dashboard/violations"
+    | "/dashboard/"
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DashboardRoute: typeof DashboardRoute
+  DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
 }
 
 declare module "@tanstack/react-router" {
@@ -55,7 +108,7 @@ declare module "@tanstack/react-router" {
       id: "/dashboard"
       path: "/dashboard"
       fullPath: "/dashboard"
-      preLoaderRoute: typeof DashboardRouteImport
+      preLoaderRoute: typeof DashboardRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/": {
@@ -65,12 +118,58 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    "/dashboard/": {
+      id: "/dashboard/"
+      path: "/"
+      fullPath: "/dashboard/"
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    "/dashboard/violations": {
+      id: "/dashboard/violations"
+      path: "/violations"
+      fullPath: "/dashboard/violations"
+      preLoaderRoute: typeof DashboardViolationsRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    "/dashboard/spatial": {
+      id: "/dashboard/spatial"
+      path: "/spatial"
+      fullPath: "/dashboard/spatial"
+      preLoaderRoute: typeof DashboardSpatialRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    "/dashboard/officers": {
+      id: "/dashboard/officers"
+      path: "/officers"
+      fullPath: "/dashboard/officers"
+      preLoaderRoute: typeof DashboardOfficersRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
   }
 }
 
+interface DashboardRouteRouteChildren {
+  DashboardOfficersRoute: typeof DashboardOfficersRoute
+  DashboardSpatialRoute: typeof DashboardSpatialRoute
+  DashboardViolationsRoute: typeof DashboardViolationsRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+}
+
+const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
+  DashboardOfficersRoute: DashboardOfficersRoute,
+  DashboardSpatialRoute: DashboardSpatialRoute,
+  DashboardViolationsRoute: DashboardViolationsRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
+}
+
+const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
+  DashboardRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DashboardRoute: DashboardRoute,
+  DashboardRouteRoute: DashboardRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

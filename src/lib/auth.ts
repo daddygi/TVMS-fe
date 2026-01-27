@@ -3,6 +3,7 @@ type AuthListener = () => void;
 class AuthStore {
   private accessToken: string | null = null;
   private listeners: Set<AuthListener> = new Set();
+  private _isInitialized = false;
 
   getAccessToken() {
     return this.accessToken;
@@ -20,6 +21,15 @@ class AuthStore {
 
   isAuthenticated() {
     return !!this.accessToken;
+  }
+
+  isInitialized() {
+    return this._isInitialized;
+  }
+
+  setInitialized(value: boolean) {
+    this._isInitialized = value;
+    this.notify();
   }
 
   subscribe(listener: AuthListener) {

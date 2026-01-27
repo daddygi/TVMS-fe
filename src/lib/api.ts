@@ -75,3 +75,16 @@ export async function refreshToken() {
   authStore.setAccessToken(data.data.accessToken);
   return data;
 }
+
+// Initialize auth state on app load
+export async function initAuth() {
+  try {
+    const { data } = await api.post("/auth/refresh");
+    authStore.setAccessToken(data.data.accessToken);
+  } catch {
+    // No valid session, user will need to login
+    authStore.clear();
+  } finally {
+    authStore.setInitialized(true);
+  }
+}
