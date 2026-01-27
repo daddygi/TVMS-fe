@@ -1,16 +1,48 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Eye, EyeOff, Lock, User } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { login } from "@/lib/api";
+import { AxiosError } from "axios";
 
 export const Route = createFileRoute("/")({
   component: LoginPage,
 });
 
 function LoginPage() {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+
+    if (!username || !password) {
+      setError("Please enter username and password");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      await login(username, password);
+      navigate({ to: "/dashboard" });
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        setError(err.response?.data?.message || "Login failed");
+      } else {
+        setError("An unexpected error occurred");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   return (
     <div className="relative flex min-h-screen items-center justify-center p-4">
@@ -44,7 +76,13 @@ function LoginPage() {
         </div>
 
         {/* Form */}
-        <form className="mt-6 space-y-4" onSubmit={(e) => e.preventDefault()}>
+        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+          {error && (
+            <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
           {/* Username */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">
@@ -56,6 +94,9 @@ function LoginPage() {
                 type="text"
                 placeholder="Enter your username"
                 className="pl-10"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -71,6 +112,9 @@ function LoginPage() {
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 className="pl-10 pr-10"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
               />
               <button
                 type="button"
@@ -89,7 +133,7 @@ function LoginPage() {
           {/* Remember & Forgot */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Checkbox id="remember" />
+              <Checkbox id="remember" disabled={isLoading} />
               <label htmlFor="remember" className="text-sm text-gray-600">
                 Remember System
               </label>
@@ -106,8 +150,16 @@ function LoginPage() {
           <Button
             type="submit"
             className="w-full cursor-pointer bg-[#1a3a5c] text-white hover:bg-[#152d47]"
+            disabled={isLoading}
           >
-            Access Dashboard
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              "Access Dashboard"
+            )}
           </Button>
         </form>
 
