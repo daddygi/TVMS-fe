@@ -1,4 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { useCallback } from "react";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/lib/api";
@@ -7,11 +8,8 @@ import { authStore } from "@/lib/auth";
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: () => {
     if (!authStore.isAuthenticated()) {
-      throw new Error("Not authenticated");
+      throw redirect({ to: "/" });
     }
-  },
-  onError: () => {
-    window.location.href = "/";
   },
   component: DashboardPage,
 });
@@ -19,10 +17,10 @@ export const Route = createFileRoute("/dashboard")({
 function DashboardPage() {
   const navigate = useNavigate();
 
-  async function handleLogout() {
+  const handleLogout = useCallback(async () => {
     await logout();
     navigate({ to: "/" });
-  }
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -60,20 +58,20 @@ function DashboardPage() {
 
         {/* Placeholder cards */}
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="rounded-lg bg-white p-6 shadow">
-            <h3 className="font-semibold text-gray-900">Total Violations</h3>
-            <p className="mt-2 text-3xl font-bold text-[#1a3a5c]">0</p>
-          </div>
-          <div className="rounded-lg bg-white p-6 shadow">
-            <h3 className="font-semibold text-gray-900">Pending Cases</h3>
-            <p className="mt-2 text-3xl font-bold text-[#1a3a5c]">0</p>
-          </div>
-          <div className="rounded-lg bg-white p-6 shadow">
-            <h3 className="font-semibold text-gray-900">Resolved Cases</h3>
-            <p className="mt-2 text-3xl font-bold text-[#1a3a5c]">0</p>
-          </div>
+          <StatCard title="Total Violations" value={0} />
+          <StatCard title="Pending Cases" value={0} />
+          <StatCard title="Resolved Cases" value={0} />
         </div>
       </main>
+    </div>
+  );
+}
+
+function StatCard({ title, value }: { title: string; value: number }) {
+  return (
+    <div className="rounded-lg bg-white p-6 shadow">
+      <h3 className="font-semibold text-gray-900">{title}</h3>
+      <p className="mt-2 text-3xl font-bold text-[#1a3a5c]">{value}</p>
     </div>
   );
 }

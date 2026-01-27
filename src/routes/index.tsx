@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Eye, EyeOff, Loader2, Lock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,30 +19,37 @@ function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
+  const togglePassword = useCallback(() => {
+    setShowPassword((prev) => !prev);
+  }, []);
 
-    if (!username || !password) {
-      setError("Please enter username and password");
-      return;
-    }
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError("");
 
-    setIsLoading(true);
-
-    try {
-      await login(username, password);
-      navigate({ to: "/dashboard" });
-    } catch (err) {
-      if (err instanceof AxiosError) {
-        setError(err.response?.data?.message || "Login failed");
-      } else {
-        setError("An unexpected error occurred");
+      if (!username.trim() || !password) {
+        setError("Please enter username and password");
+        return;
       }
-    } finally {
-      setIsLoading(false);
-    }
-  }
+
+      setIsLoading(true);
+
+      try {
+        await login(username.trim(), password);
+        navigate({ to: "/dashboard" });
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          setError(err.response?.data?.message || "Login failed");
+        } else {
+          setError("An unexpected error occurred");
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [username, password, navigate]
+  );
 
   return (
     <div className="relative flex min-h-screen items-center justify-center p-4">
@@ -78,48 +85,64 @@ function LoginPage() {
         {/* Form */}
         <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
           {error && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
+            <div
+              role="alert"
+              className="rounded-md bg-red-50 p-3 text-sm text-red-600"
+            >
               {error}
             </div>
           )}
 
           {/* Username */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">
+            <label
+              htmlFor="username"
+              className="text-sm font-medium text-gray-700"
+            >
               Username
             </label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
+                id="username"
+                name="username"
                 type="text"
                 placeholder="Enter your username"
                 className="pl-10"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={isLoading}
+                autoComplete="username"
               />
             </div>
           </div>
 
           {/* Password */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">
+            <label
+              htmlFor="password"
+              className="text-sm font-medium text-gray-700"
+            >
               Password
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
+                id="password"
+                name="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 className="pl-10 pr-10"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
+                autoComplete="current-password"
               />
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={togglePassword}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -138,12 +161,12 @@ function LoginPage() {
                 Remember System
               </label>
             </div>
-            <a
-              href="#"
+            <button
+              type="button"
               className="text-sm font-medium text-[#1a3a5c] hover:underline"
             >
               Forgot Password?
-            </a>
+            </button>
           </div>
 
           {/* Submit */}
@@ -164,18 +187,15 @@ function LoginPage() {
         </form>
 
         {/* Footer */}
-        <div className="mt-8 text-center text-xs text-gray-500">
+        <footer className="mt-8 text-center text-xs text-gray-500">
           <p>
             <span className="font-semibold text-red-600">
               Restricted Access:
             </span>{" "}
             Authorized LTO Personnel Only.
           </p>
-          <p className="mt-1">
-            System Version 1.0 | &copy; {new Date().getFullYear()} Arellano
-            University
-          </p>
-        </div>
+          <p className="mt-1">System Version 1.0 | &copy; 2025 Arellano University</p>
+        </footer>
       </div>
     </div>
   );
