@@ -23,13 +23,13 @@ function LoginPage() {
       </div>
 
       {/* Login Card */}
-      <div className="relative z-10 w-full max-w-md rounded-lg bg-white p-8 shadow-xl">
+      <div className="relative z-10 w-full max-w-sm rounded-lg bg-white p-6 shadow-xl">
         {/* Logo */}
         <div className="flex justify-center">
           <img
             src="/lto-logo.jpeg"
             alt="LTO Logo"
-            className="h-24 w-24 object-contain"
+            className="h-20 w-20 object-contain"
           />
         </div>
 
@@ -44,7 +44,7 @@ function LoginPage() {
         </div>
 
         {/* Form */}
-        <form className="mt-8 space-y-4" onSubmit={(e) => e.preventDefault()}>
+        <form className="mt-6 space-y-4" onSubmit={(e) => e.preventDefault()}>
           {/* Username */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">
