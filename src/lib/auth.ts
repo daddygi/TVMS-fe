@@ -19,29 +19,37 @@ function parseJwt(token: string): User | null {
   }
 }
 
+export interface AuthSnapshot {
+  user: User | null;
+  isAuthenticated: boolean;
+}
+
 class AuthStore {
   private accessToken: string | null = null;
   private user: User | null = null;
   private listeners: Set<AuthListener> = new Set();
   private _isInitialized = false;
+  private snapshot: AuthSnapshot = { user: null, isAuthenticated: false };
 
   getAccessToken() {
     return this.accessToken;
   }
 
-  getUser() {
-    return this.user;
+  getSnapshot() {
+    return this.snapshot;
   }
 
   setAccessToken(token: string) {
     this.accessToken = token;
     this.user = parseJwt(token);
+    this.updateSnapshot();
     this.notify();
   }
 
   clear() {
     this.accessToken = null;
     this.user = null;
+    this.updateSnapshot();
     this.notify();
   }
 
@@ -61,6 +69,13 @@ class AuthStore {
   subscribe(listener: AuthListener) {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
+  }
+
+  private updateSnapshot() {
+    this.snapshot = {
+      user: this.user,
+      isAuthenticated: !!this.accessToken,
+    };
   }
 
   private notify() {

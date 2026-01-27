@@ -79,27 +79,29 @@ const sampleMarkers: ViolationMarker[] = [
   },
 ];
 
+// Metro Manila center
+const MAP_CENTER: [number, number] = [14.5995, 120.9842];
+
 function MapController() {
   const map = useMap();
 
   useEffect(() => {
     // Invalidate size after mount to fix rendering issues
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       map.invalidateSize();
     }, 100);
+    return () => clearTimeout(timer);
   }, [map]);
 
   return null;
 }
 
 export function ViolationMap() {
-  // Metro Manila center
-  const center: [number, number] = [14.5995, 120.9842];
 
   return (
     <div className="h-full w-full rounded-lg overflow-hidden">
       <MapContainer
-        center={center}
+        center={MAP_CENTER}
         zoom={10}
         className="h-full w-full"
         scrollWheelZoom={true}

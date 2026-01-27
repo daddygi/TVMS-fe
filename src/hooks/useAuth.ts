@@ -1,18 +1,11 @@
 import { useSyncExternalStore } from "react";
 import { authStore, type User } from "@/lib/auth";
 
+const subscribe = (callback: () => void) => authStore.subscribe(callback);
+const getSnapshot = () => authStore.getSnapshot();
+
 export function useAuth() {
-  const user = useSyncExternalStore(
-    (callback) => authStore.subscribe(callback),
-    () => authStore.getUser()
-  );
-
-  const isAuthenticated = useSyncExternalStore(
-    (callback) => authStore.subscribe(callback),
-    () => authStore.isAuthenticated()
-  );
-
-  return { user, isAuthenticated };
+  return useSyncExternalStore(subscribe, getSnapshot);
 }
 
 export type { User };
