@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { authStore, type User } from "@/lib/auth";
+import { authStore, type User } from "@/stores/auth";
 
 const subscribe = (callback: () => void) => authStore.subscribe(callback);
 const getSnapshot = () => authStore.getSnapshot();
