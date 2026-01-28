@@ -75,3 +75,28 @@ export interface StatsData {
 export interface StatsResponse {
   data: StatsData;
 }
+
+// Input types for CRUD operations
+export interface ApprehensionInput {
+  dateOfSubmission: string;
+  dateOfApprehension: string;
+  timeOfApprehension: string;
+  agency: string;
+  apprehendingOfficer: string;
+  caseNumber: string;
+  driver: Driver;
+  violation: string;
+  confiscatedItem: ConfiscatedItem;
+  restrictionCode: string;
+  conditions: string;
+  nationality: string;
+  gender: string;
+  mvType: string;
+  plateNumber: string;
+  placeOfApprehension: string;
+  remarks: string;
+}
+
+export interface ApprehensionResponse {
+  data: Apprehension;
+}

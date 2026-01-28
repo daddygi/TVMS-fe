@@ -5,6 +5,8 @@ import type {
   ApprehensionFilters,
   StatsResponse,
   StatsFilters,
+  ApprehensionInput,
+  ApprehensionResponse,
 } from "@/types/apprehension";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -127,4 +129,24 @@ export async function getStats(filters: StatsFilters = {}): Promise<StatsRespons
 
   const { data } = await api.get(`/apprehensions/stats?${params.toString()}`);
   return data;
+}
+
+// Apprehension CRUD operations
+export async function createApprehension(
+  input: ApprehensionInput
+): Promise<ApprehensionResponse> {
+  const { data } = await api.post("/apprehensions", input);
+  return data;
+}
+
+export async function updateApprehension(
+  id: string,
+  input: Partial<ApprehensionInput>
+): Promise<ApprehensionResponse> {
+  const { data } = await api.patch(`/apprehensions/${id}`, input);
+  return data;
+}
+
+export async function deleteApprehension(id: string): Promise<void> {
+  await api.delete(`/apprehensions/${id}`);
 }

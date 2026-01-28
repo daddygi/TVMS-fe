@@ -3,3 +3,7 @@ export { DashboardLayout } from "./dashboard-layout";
 export { StatsCard } from "./stats-card";
 export { ViolationMap } from "./violation-map";
 export { ViolationTable } from "./violation-table";
+export { ViolationLogsTable } from "./violation-logs-table";
+export { ViolationFormModal } from "./violation-form-modal";
+export { ViolationDetailModal } from "./violation-detail-modal";
+export { DeleteConfirmDialog } from "./delete-confirm-dialog";
