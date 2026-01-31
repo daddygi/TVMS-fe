@@ -1,8 +1,11 @@
 type AuthListener = () => void;
 
+export type UserRole = "admin" | "user";
+
 export interface User {
   id: string;
   username: string;
+  role: UserRole;
 }
 
 function parseJwt(token: string): User | null {
@@ -13,6 +16,7 @@ function parseJwt(token: string): User | null {
     return {
       id: payload.userId,
       username: payload.username,
+      role: payload.role || "user",
     };
   } catch {
     return null;
