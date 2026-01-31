@@ -1,7 +1,7 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import {
   LayoutDashboard,
-  MapPin,
+  BarChart3,
   FileText,
   Users,
   LogOut,
@@ -12,7 +12,7 @@ import { logout } from "@/lib/api";
 
 const navItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true },
-  { to: "/dashboard/spatial", icon: MapPin, label: "Spatial Analytics", exact: false },
+  { to: "/dashboard/analytics", icon: BarChart3, label: "Analytics", exact: false },
   { to: "/dashboard/violations", icon: FileText, label: "Violation Logs", exact: false },
   { to: "/dashboard/officers", icon: Users, label: "Officers", exact: false },
 ] as const;

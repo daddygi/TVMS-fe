@@ -8,6 +8,16 @@ import type {
   ApprehensionInput,
   ApprehensionResponse,
 } from "@/types/apprehension";
+import type {
+  TrendsFilters,
+  TrendsResponse,
+  DistributionsFilters,
+  DistributionsResponse,
+  TimePatternsFilters,
+  TimePatternsResponse,
+  SummaryFilters,
+  SummaryResponse,
+} from "@/types/analytics";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -149,4 +159,74 @@ export async function updateApprehension(
 
 export async function deleteApprehension(id: string): Promise<void> {
   await api.delete(`/apprehensions/${id}`);
+}
+
+// Analytics API
+export async function getTrends(
+  filters: TrendsFilters = {}
+): Promise<TrendsResponse> {
+  const params = new URLSearchParams();
+
+  if (filters.granularity) params.append("granularity", filters.granularity);
+  if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
+  if (filters.dateTo) params.append("dateTo", filters.dateTo);
+  if (filters.agency) params.append("agency", filters.agency);
+  if (filters.violation) params.append("violation", filters.violation);
+  if (filters.placeOfApprehension)
+    params.append("placeOfApprehension", filters.placeOfApprehension);
+
+  const { data } = await api.get(`/analytics/trends?${params.toString()}`);
+  return data;
+}
+
+export async function getDistributions(
+  filters: DistributionsFilters = {}
+): Promise<DistributionsResponse> {
+  const params = new URLSearchParams();
+
+  if (filters.groupBy) params.append("groupBy", filters.groupBy);
+  if (filters.limit) params.append("limit", String(filters.limit));
+  if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
+  if (filters.dateTo) params.append("dateTo", filters.dateTo);
+  if (filters.agency) params.append("agency", filters.agency);
+  if (filters.violation) params.append("violation", filters.violation);
+  if (filters.placeOfApprehension)
+    params.append("placeOfApprehension", filters.placeOfApprehension);
+
+  const { data } = await api.get(
+    `/analytics/distributions?${params.toString()}`
+  );
+  return data;
+}
+
+export async function getTimePatterns(
+  filters: TimePatternsFilters = {}
+): Promise<TimePatternsResponse> {
+  const params = new URLSearchParams();
+
+  if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
+  if (filters.dateTo) params.append("dateTo", filters.dateTo);
+  if (filters.agency) params.append("agency", filters.agency);
+  if (filters.violation) params.append("violation", filters.violation);
+  if (filters.placeOfApprehension)
+    params.append("placeOfApprehension", filters.placeOfApprehension);
+
+  const { data } = await api.get(
+    `/analytics/time-patterns?${params.toString()}`
+  );
+  return data;
+}
+
+export async function getSummary(
+  filters: SummaryFilters = {}
+): Promise<SummaryResponse> {
+  const params = new URLSearchParams();
+
+  if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
+  if (filters.dateTo) params.append("dateTo", filters.dateTo);
+  if (filters.comparePrevious)
+    params.append("comparePrevious", String(filters.comparePrevious));
+
+  const { data } = await api.get(`/analytics/summary?${params.toString()}`);
+  return data;
 }
