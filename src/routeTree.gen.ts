@@ -13,8 +13,8 @@ import { Route as DashboardRouteRouteImport } from "./routes/dashboard/route"
 import { Route as IndexRouteImport } from "./routes/index"
 import { Route as DashboardIndexRouteImport } from "./routes/dashboard/index"
 import { Route as DashboardViolationsRouteImport } from "./routes/dashboard/violations"
-import { Route as DashboardSpatialRouteImport } from "./routes/dashboard/spatial"
 import { Route as DashboardOfficersRouteImport } from "./routes/dashboard/officers"
+import { Route as DashboardAnalyticsRouteImport } from "./routes/dashboard/analytics"
 
 const DashboardRouteRoute = DashboardRouteRouteImport.update({
   id: "/dashboard",
@@ -36,29 +36,29 @@ const DashboardViolationsRoute = DashboardViolationsRouteImport.update({
   path: "/violations",
   getParentRoute: () => DashboardRouteRoute,
 } as any)
-const DashboardSpatialRoute = DashboardSpatialRouteImport.update({
-  id: "/spatial",
-  path: "/spatial",
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
 const DashboardOfficersRoute = DashboardOfficersRouteImport.update({
   id: "/officers",
   path: "/officers",
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardAnalyticsRoute = DashboardAnalyticsRouteImport.update({
+  id: "/analytics",
+  path: "/analytics",
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
   "/dashboard": typeof DashboardRouteRouteWithChildren
+  "/dashboard/analytics": typeof DashboardAnalyticsRoute
   "/dashboard/officers": typeof DashboardOfficersRoute
-  "/dashboard/spatial": typeof DashboardSpatialRoute
   "/dashboard/violations": typeof DashboardViolationsRoute
   "/dashboard/": typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
+  "/dashboard/analytics": typeof DashboardAnalyticsRoute
   "/dashboard/officers": typeof DashboardOfficersRoute
-  "/dashboard/spatial": typeof DashboardSpatialRoute
   "/dashboard/violations": typeof DashboardViolationsRoute
   "/dashboard": typeof DashboardIndexRoute
 }
@@ -66,8 +66,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   "/": typeof IndexRoute
   "/dashboard": typeof DashboardRouteRouteWithChildren
+  "/dashboard/analytics": typeof DashboardAnalyticsRoute
   "/dashboard/officers": typeof DashboardOfficersRoute
-  "/dashboard/spatial": typeof DashboardSpatialRoute
   "/dashboard/violations": typeof DashboardViolationsRoute
   "/dashboard/": typeof DashboardIndexRoute
 }
@@ -76,23 +76,23 @@ export interface FileRouteTypes {
   fullPaths:
     | "/"
     | "/dashboard"
+    | "/dashboard/analytics"
     | "/dashboard/officers"
-    | "/dashboard/spatial"
     | "/dashboard/violations"
     | "/dashboard/"
   fileRoutesByTo: FileRoutesByTo
   to:
     | "/"
+    | "/dashboard/analytics"
     | "/dashboard/officers"
-    | "/dashboard/spatial"
     | "/dashboard/violations"
     | "/dashboard"
   id:
     | "__root__"
     | "/"
     | "/dashboard"
+    | "/dashboard/analytics"
     | "/dashboard/officers"
-    | "/dashboard/spatial"
     | "/dashboard/violations"
     | "/dashboard/"
   fileRoutesById: FileRoutesById
@@ -132,13 +132,6 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof DashboardViolationsRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    "/dashboard/spatial": {
-      id: "/dashboard/spatial"
-      path: "/spatial"
-      fullPath: "/dashboard/spatial"
-      preLoaderRoute: typeof DashboardSpatialRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
     "/dashboard/officers": {
       id: "/dashboard/officers"
       path: "/officers"
@@ -146,19 +139,26 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof DashboardOfficersRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    "/dashboard/analytics": {
+      id: "/dashboard/analytics"
+      path: "/analytics"
+      fullPath: "/dashboard/analytics"
+      preLoaderRoute: typeof DashboardAnalyticsRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
   }
 }
 
 interface DashboardRouteRouteChildren {
+  DashboardAnalyticsRoute: typeof DashboardAnalyticsRoute
   DashboardOfficersRoute: typeof DashboardOfficersRoute
-  DashboardSpatialRoute: typeof DashboardSpatialRoute
   DashboardViolationsRoute: typeof DashboardViolationsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
+  DashboardAnalyticsRoute: DashboardAnalyticsRoute,
   DashboardOfficersRoute: DashboardOfficersRoute,
-  DashboardSpatialRoute: DashboardSpatialRoute,
   DashboardViolationsRoute: DashboardViolationsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
