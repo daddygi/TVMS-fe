@@ -18,6 +18,13 @@ import type {
   SummaryFilters,
   SummaryResponse,
 } from "@/types/analytics";
+import type {
+  UsersResponse,
+  UserResponse,
+  UserFilters,
+  CreateUserInput,
+  UpdateUserInput,
+} from "@/types/user";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -229,4 +236,39 @@ export async function getSummary(
 
   const { data } = await api.get(`/analytics/summary?${params.toString()}`);
   return data;
+}
+
+// Users API (Admin only)
+export async function getUsers(
+  filters: UserFilters = {}
+): Promise<UsersResponse> {
+  const params = new URLSearchParams();
+
+  if (filters.page) params.append("page", String(filters.page));
+  if (filters.limit) params.append("limit", String(filters.limit));
+
+  const { data } = await api.get(`/users?${params.toString()}`);
+  return data;
+}
+
+export async function getUser(id: string): Promise<UserResponse> {
+  const { data } = await api.get(`/users/${id}`);
+  return data;
+}
+
+export async function createUser(input: CreateUserInput): Promise<UserResponse> {
+  const { data } = await api.post("/users", input);
+  return data;
+}
+
+export async function updateUser(
+  id: string,
+  input: UpdateUserInput
+): Promise<UserResponse> {
+  const { data } = await api.patch(`/users/${id}`, input);
+  return data;
+}
+
+export async function deleteUser(id: string): Promise<void> {
+  await api.delete(`/users/${id}`);
 }

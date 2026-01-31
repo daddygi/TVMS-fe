@@ -9,12 +9,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logout } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
-  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true },
-  { to: "/dashboard/analytics", icon: BarChart3, label: "Analytics", exact: false },
-  { to: "/dashboard/violations", icon: FileText, label: "Violation Logs", exact: false },
-  { to: "/dashboard/officers", icon: Users, label: "Officers", exact: false },
+  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true, adminOnly: false },
+  { to: "/dashboard/analytics", icon: BarChart3, label: "Analytics", exact: false, adminOnly: false },
+  { to: "/dashboard/violations", icon: FileText, label: "Violation Logs", exact: false, adminOnly: false },
+  { to: "/dashboard/users", icon: Users, label: "Users", exact: false, adminOnly: true },
 ] as const;
 
 interface SidebarProps {
@@ -24,6 +25,12 @@ interface SidebarProps {
 
 export function Sidebar({ open = false, onClose }: SidebarProps) {
   const location = useLocation();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+
+  const visibleNavItems = navItems.filter(
+    (item) => !item.adminOnly || isAdmin
+  );
 
   const handleLogout = async () => {
     await logout();
@@ -85,7 +92,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1 px-3">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const active = isActive(item.to, item.exact);
             return (
               <Link
