@@ -1,6 +1,6 @@
 import { useMemo, useCallback, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Calendar } from "lucide-react";
+import { Calendar, MapPin } from "lucide-react";
 import {
   DashboardLayout,
   StatsCard,
@@ -18,11 +18,8 @@ export const Route = createFileRoute("/dashboard/")({
 
 // Generate month options for 2025 (dataset range)
 function getMonthOptions(): { value: string; label: string }[] {
-  const options: { value: string; label: string }[] = [
-    { value: "", label: "All Time" },
-  ];
+  const options: { value: string; label: string }[] = [];
 
-  // Generate all months of 2025
   for (let month = 11; month >= 0; month--) {
     const date = new Date(2025, month, 1);
     const value = `2025-${String(month + 1).padStart(2, "0")}`;
@@ -37,6 +34,32 @@ function getMonthOptions(): { value: string; label: string }[] {
 }
 
 const MONTH_OPTIONS = getMonthOptions();
+const DEFAULT_MONTH = MONTH_OPTIONS[0].value; // Most recent month
+
+const CITY_OPTIONS = Object.entries(NCR_LOCATIONS)
+  .filter(
+    ([, data]) =>
+      ![
+        "EDSA",
+        "GIL PUYAT",
+        "ROXAS BLVD",
+        "C5",
+        "SLEX",
+        "NLEX",
+        "SKYWAY",
+        "COMMONWEALTH AVE",
+        "KATIPUNAN AVE",
+        "ORTIGAS AVE",
+        "AURORA BLVD",
+        "ESPAÑA BLVD",
+        "QUEZON AVE",
+        "R10",
+        "DAANG HARI",
+        "QUIRINO AVE",
+      ].includes(data.name)
+  )
+  .map(([key, data]) => ({ value: key, label: data.name, coords: data.coords }))
+  .sort((a, b) => a.label.localeCompare(b.label));
 
 // Map location names from API to coordinates (aggregates duplicates)
 function mapLocationsToCoords(
@@ -68,10 +91,12 @@ function mapLocationsToCoords(
 
 function DashboardPage() {
   const { user } = useAuth();
-  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState(DEFAULT_MONTH);
+  const [selectedCity, setSelectedCity] = useState("");
 
   // Convert month to API date format
-  const dateFilter = selectedMonth ? `${selectedMonth}-01` : undefined;
+  const dateFilter = `${selectedMonth}-01`;
+  const cityFilter = selectedCity || undefined;
 
   // Table data - paginated for display
   const {
@@ -79,12 +104,17 @@ function DashboardPage() {
     pagination,
     isLoading: tableLoading,
     setPage,
-  } = useApprehensions({ limit: 10, date: dateFilter });
+  } = useApprehensions({
+    limit: 10,
+    date: dateFilter,
+    placeOfApprehension: cityFilter,
+  });
 
   // Stats data - from dedicated endpoint
   const { stats, isLoading: statsLoading } = useStats({
-    month: selectedMonth || undefined,
+    month: selectedMonth,
     topLimit: 10,
+    placeOfApprehension: cityFilter,
   });
 
   const handleMonthChange = useCallback(
@@ -94,16 +124,28 @@ function DashboardPage() {
     []
   );
 
+  const handleCityChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setSelectedCity(e.target.value);
+    },
+    []
+  );
+
+  // Get coordinates for selected city to focus map
+  const focusCoords = useMemo(() => {
+    if (!selectedCity) return null;
+    const city = CITY_OPTIONS.find((c) => c.value === selectedCity);
+    return city?.coords ?? null;
+  }, [selectedCity]);
+
   // Map locations from stats to coordinates
   const locationAggregations = useMemo(
     () => (stats?.topLocations ? mapLocationsToCoords(stats.topLocations) : []),
     [stats?.topLocations]
   );
 
-  // Get display label for selected month
-  const selectedMonthLabel = selectedMonth
-    ? MONTH_OPTIONS.find((o) => o.value === selectedMonth)?.label ?? "Selected Month"
-    : "All Time";
+  const selectedMonthLabel =
+    MONTH_OPTIONS.find((o) => o.value === selectedMonth)?.label ?? selectedMonth;
 
   const isLoading = tableLoading || statsLoading;
 
@@ -119,13 +161,13 @@ function DashboardPage() {
     >
       {/* Filter Bar */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-gray-200 bg-white p-4">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#1a3a5c]/10">
               <Calendar className="h-4 w-4 text-[#1a3a5c]" />
             </div>
             <div>
-              <p className="text-xs font-medium text-gray-500">Filter by Month</p>
+              <p className="text-xs font-medium text-gray-500">Month</p>
               <select
                 value={selectedMonth}
                 onChange={handleMonthChange}
@@ -133,6 +175,27 @@ function DashboardPage() {
                 className="mt-0.5 w-40 cursor-pointer rounded border-none bg-transparent p-0 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {MONTH_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#1a3a5c]/10">
+              <MapPin className="h-4 w-4 text-[#1a3a5c]" />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500">City</p>
+              <select
+                value={selectedCity}
+                onChange={handleCityChange}
+                disabled={isLoading}
+                className="mt-0.5 w-40 cursor-pointer rounded border-none bg-transparent p-0 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">All Cities</option>
+                {CITY_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -150,35 +213,52 @@ function DashboardPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatsCard
           value={stats?.total.toLocaleString() ?? "-"}
           label="TOTAL APPREHENSIONS"
           subtitle={selectedMonthLabel}
         />
-        <StatsCard
-          value={stats?.topAgencies[0]?.agency ?? "-"}
-          label="TOP AGENCY"
-          subtitle={
-            stats?.topAgencies[0]
-              ? `${stats.topAgencies[0].count.toLocaleString()} apprehensions`
-              : "Loading..."
-          }
-        />
-        <StatsCard
-          value={stats?.topLocations.length ?? "-"}
-          label="LOCATIONS"
-          subtitle="Top areas"
-        />
-        <StatsCard
-          value={stats?.topViolations[0]?.violation ?? "-"}
-          label="TOP VIOLATION"
-          subtitle={
-            stats?.topViolations[0]
-              ? `${stats.topViolations[0].count.toLocaleString()} cases`
-              : "Loading..."
-          }
-        />
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <p className="text-sm font-medium text-gray-600">TOP VIOLATIONS</p>
+          <ul className="mt-2 space-y-1">
+            {stats?.topViolations.slice(0, 3).map((v, i) => (
+              <li
+                key={v.violation}
+                className="flex items-center justify-between gap-2 text-sm"
+              >
+                <span className="truncate font-semibold text-[#1a3a5c]">
+                  {i + 1}. {v.violation}
+                </span>
+                <span className="shrink-0 text-xs text-gray-400">
+                  {v.count.toLocaleString()}
+                </span>
+              </li>
+            )) ?? (
+              <li className="text-sm text-gray-400">-</li>
+            )}
+          </ul>
+        </div>
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <p className="text-sm font-medium text-gray-600">TOP LOCATIONS</p>
+          <ul className="mt-2 space-y-1">
+            {stats?.topLocations.slice(0, 3).map((loc, i) => (
+              <li
+                key={loc.location}
+                className="flex items-center justify-between text-sm"
+              >
+                <span className="font-semibold text-[#1a3a5c]">
+                  {i + 1}. {loc.location}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {loc.count.toLocaleString()}
+                </span>
+              </li>
+            )) ?? (
+              <li className="text-sm text-gray-400">-</li>
+            )}
+          </ul>
+        </div>
       </div>
 
       {/* Map and Table Grid */}
@@ -196,7 +276,7 @@ function DashboardPage() {
               </span>
             </div>
             <div className="h-[400px] p-2 sm:h-[500px]">
-              <ViolationMap locations={locationAggregations} isLoading={statsLoading} />
+              <ViolationMap locations={locationAggregations} isLoading={statsLoading} focusCoords={focusCoords} />
             </div>
           </div>
         </div>

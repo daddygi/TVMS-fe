@@ -39,7 +39,15 @@ import type {
   DayOfWeekPattern,
   SummaryResponse,
 } from "@/types/analytics";
-import { TrendingUp, TrendingDown, Loader2, AlertCircle } from "lucide-react";
+import {
+  TrendingUp,
+  TrendingDown,
+  Loader2,
+  AlertCircle,
+  Download,
+} from "lucide-react";
+import { generateReport } from "@/lib/generate-report";
+import { NCR_LOCATIONS } from "@/lib/locations";
 
 export const Route = createFileRoute("/dashboard/analytics")({
   component: AnalyticsPage,
@@ -72,23 +80,52 @@ const dayConfig: ChartConfig = {
   count: { label: "Apprehensions", color: "hsl(142, 71%, 45%)" },
 };
 
-const DATE_MIN = "2025-01-01";
-const DATE_MAX = "2025-12-31";
+const CITY_OPTIONS = Object.entries(NCR_LOCATIONS)
+  .filter(([, data]) => !["EDSA", "GIL PUYAT", "ROXAS BLVD", "C5", "SLEX", "NLEX", "SKYWAY", "COMMONWEALTH AVE", "KATIPUNAN AVE", "ORTIGAS AVE", "AURORA BLVD", "ESPAÑA BLVD", "QUEZON AVE", "R10", "DAANG HARI", "QUIRINO AVE"].includes(data.name))
+  .map(([key, data]) => ({ value: key, label: data.name }))
+  .sort((a, b) => a.label.localeCompare(b.label));
 
-function getDefaultDateRange() {
+const MONTHS = [
+  { value: "", label: "All Months" },
+  { value: "01", label: "January" },
+  { value: "02", label: "February" },
+  { value: "03", label: "March" },
+  { value: "04", label: "April" },
+  { value: "05", label: "May" },
+  { value: "06", label: "June" },
+  { value: "07", label: "July" },
+  { value: "08", label: "August" },
+  { value: "09", label: "September" },
+  { value: "10", label: "October" },
+  { value: "11", label: "November" },
+  { value: "12", label: "December" },
+];
+
+const YEARS = ["2025", "2024", "2023"];
+
+function getDateRange(month: string, year: string): { from: string; to: string } {
+  if (!month) {
+    return { from: `${year}-01-01`, to: `${year}-12-31` };
+  }
+  const m = parseInt(month, 10);
+  const y = parseInt(year, 10);
+  const lastDay = new Date(y, m, 0).getDate();
   return {
-    from: "2025-01-01",
-    to: "2025-12-31",
+    from: `${year}-${month}-01`,
+    to: `${year}-${month}-${String(lastDay).padStart(2, "0")}`,
   };
 }
 
 function AnalyticsPage() {
-  const defaultDates = getDefaultDateRange();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [dateFrom, setDateFrom] = useState(defaultDates.from);
-  const [dateTo, setDateTo] = useState(defaultDates.to);
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedYear, setSelectedYear] = useState("2025");
+  const [selectedCity, setSelectedCity] = useState("");
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  const { from: dateFrom, to: dateTo } = getDateRange(selectedMonth, selectedYear);
+  const cityFilter = selectedCity || undefined;
 
   const [trends, setTrends] = useState<TrendsSeries[]>([]);
   const [agencyDist, setAgencyDist] = useState<DistributionItem[]>([]);
@@ -99,16 +136,8 @@ function AnalyticsPage() {
   const [summary, setSummary] = useState<SummaryResponse["data"] | null>(null);
 
   useEffect(() => {
-    // Cancel previous request
     abortControllerRef.current?.abort();
     abortControllerRef.current = new AbortController();
-
-    // Validate date range
-    if (dateFrom > dateTo) {
-      setError("Start date must be before end date");
-      setLoading(false);
-      return;
-    }
 
     async function fetchData() {
       setLoading(true);
@@ -123,15 +152,14 @@ function AnalyticsPage() {
           patternsRes,
           summaryRes,
         ] = await Promise.all([
-          getTrends({ dateFrom, dateTo, granularity: "day" }),
-          getDistributions({ dateFrom, dateTo, groupBy: "agency", limit: 8 }),
-          getDistributions({ dateFrom, dateTo, groupBy: "violation", limit: 8 }),
-          getDistributions({ dateFrom, dateTo, groupBy: "mvType", limit: 6 }),
-          getTimePatterns({ dateFrom, dateTo }),
-          getSummary({ dateFrom, dateTo, comparePrevious: true }),
+          getTrends({ dateFrom, dateTo, granularity: "day", placeOfApprehension: cityFilter }),
+          getDistributions({ dateFrom, dateTo, groupBy: "agency", limit: 8, placeOfApprehension: cityFilter }),
+          getDistributions({ dateFrom, dateTo, groupBy: "violation", limit: 8, placeOfApprehension: cityFilter }),
+          getDistributions({ dateFrom, dateTo, groupBy: "mvType", limit: 6, placeOfApprehension: cityFilter }),
+          getTimePatterns({ dateFrom, dateTo, placeOfApprehension: cityFilter }),
+          getSummary({ dateFrom, dateTo, comparePrevious: true, placeOfApprehension: cityFilter }),
         ]);
 
-        // Only update state if not aborted
         if (!abortControllerRef.current?.signal.aborted) {
           setTrends(trendsRes.data.series);
           setAgencyDist(agencyRes.data.items);
@@ -158,46 +186,73 @@ function AnalyticsPage() {
     return () => {
       abortControllerRef.current?.abort();
     };
-  }, [dateFrom, dateTo]);
+  }, [dateFrom, dateTo, cityFilter]);
 
   return (
     <DashboardLayout title="Analytics">
       <div className="space-y-6">
-        {/* Date Filters */}
+        {/* Filters */}
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
             <label
-              htmlFor="date-from"
+              htmlFor="month-select"
               className="text-sm font-medium text-gray-700"
             >
-              From:
+              Month:
             </label>
-            <input
-              id="date-from"
-              type="date"
-              value={dateFrom}
-              min={DATE_MIN}
-              max={dateTo}
-              onChange={(e) => setDateFrom(e.target.value)}
+            <select
+              id="month-select"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
               className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
-            />
+            >
+              {MONTHS.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="flex items-center gap-2">
             <label
-              htmlFor="date-to"
+              htmlFor="year-select"
               className="text-sm font-medium text-gray-700"
             >
-              To:
+              Year:
             </label>
-            <input
-              id="date-to"
-              type="date"
-              value={dateTo}
-              min={dateFrom}
-              max={DATE_MAX}
-              onChange={(e) => setDateTo(e.target.value)}
+            <select
+              id="year-select"
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
               className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
-            />
+            >
+              {YEARS.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="city-select"
+              className="text-sm font-medium text-gray-700"
+            >
+              City:
+            </label>
+            <select
+              id="city-select"
+              value={selectedCity}
+              onChange={(e) => setSelectedCity(e.target.value)}
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+            >
+              <option value="">All Cities</option>
+              {CITY_OPTIONS.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
           </div>
           {loading && (
             <Loader2
@@ -205,6 +260,25 @@ function AnalyticsPage() {
               aria-label="Loading"
             />
           )}
+          <button
+            onClick={() =>
+              generateReport({
+                dateFrom,
+                dateTo,
+                summary,
+                agencyDist,
+                violationDist,
+                vehicleDist,
+                hourPatterns,
+                dayPatterns,
+              })
+            }
+            disabled={loading}
+            className="ml-auto flex items-center gap-2 rounded-md bg-[#1a3a5c] px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#15304d] disabled:opacity-50"
+          >
+            <Download className="h-4 w-4" />
+            Download Report
+          </button>
         </div>
 
         {/* Error State */}

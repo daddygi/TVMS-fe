@@ -7,6 +7,7 @@ import type {
   StatsFilters,
   ApprehensionInput,
   ApprehensionResponse,
+  BulkImportResponse,
 } from "@/types/apprehension";
 import type {
   TrendsFilters,
@@ -127,6 +128,8 @@ export async function getApprehensions(
   if (filters.violation) params.append("violation", filters.violation);
   if (filters.plateNumber) params.append("plateNumber", filters.plateNumber);
   if (filters.driverName) params.append("driverName", filters.driverName);
+  if (filters.placeOfApprehension)
+    params.append("placeOfApprehension", filters.placeOfApprehension);
 
   const { data } = await api.get(`/apprehensions?${params.toString()}`);
   return data;
@@ -153,6 +156,13 @@ export async function createApprehension(
   input: ApprehensionInput
 ): Promise<ApprehensionResponse> {
   const { data } = await api.post("/apprehensions", input);
+  return data;
+}
+
+export async function bulkImportApprehensions(
+  records: ApprehensionInput[]
+): Promise<BulkImportResponse> {
+  const { data } = await api.post("/apprehensions/bulk", { records });
   return data;
 }
 
@@ -233,6 +243,8 @@ export async function getSummary(
   if (filters.dateTo) params.append("dateTo", filters.dateTo);
   if (filters.comparePrevious)
     params.append("comparePrevious", String(filters.comparePrevious));
+  if (filters.placeOfApprehension)
+    params.append("placeOfApprehension", filters.placeOfApprehension);
 
   const { data } = await api.get(`/analytics/summary?${params.toString()}`);
   return data;

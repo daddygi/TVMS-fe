@@ -52,9 +52,12 @@ export function useApprehensions(
     setFilters((prev) => ({ ...prev, page }));
   }, []);
 
-  const updateFilters = useCallback((newFilters: ApprehensionFilters) => {
-    setFilters((prev) => ({ ...prev, ...newFilters, page: 1 }));
-  }, []);
+  const updateFilters = useCallback(
+    (newFilters: ApprehensionFilters) => {
+      setFilters({ ...initialFilters, ...newFilters, page: 1 });
+    },
+    [initialFilters]
+  );
 
   return {
     data,
