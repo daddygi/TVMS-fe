@@ -39,7 +39,14 @@ import type {
   DayOfWeekPattern,
   SummaryResponse,
 } from "@/types/analytics";
-import { TrendingUp, TrendingDown, Loader2, AlertCircle } from "lucide-react";
+import {
+  TrendingUp,
+  TrendingDown,
+  Loader2,
+  AlertCircle,
+  Download,
+} from "lucide-react";
+import { generateReport } from "@/lib/generate-report";
 
 export const Route = createFileRoute("/dashboard/analytics")({
   component: AnalyticsPage,
@@ -205,6 +212,25 @@ function AnalyticsPage() {
               aria-label="Loading"
             />
           )}
+          <button
+            onClick={() =>
+              generateReport({
+                dateFrom,
+                dateTo,
+                summary,
+                agencyDist,
+                violationDist,
+                vehicleDist,
+                hourPatterns,
+                dayPatterns,
+              })
+            }
+            disabled={loading}
+            className="ml-auto flex items-center gap-2 rounded-md bg-[#1a3a5c] px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#15304d] disabled:opacity-50"
+          >
+            <Download className="h-4 w-4" />
+            Download Report
+          </button>
         </div>
 
         {/* Error State */}
