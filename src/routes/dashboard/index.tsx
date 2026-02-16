@@ -18,11 +18,8 @@ export const Route = createFileRoute("/dashboard/")({
 
 // Generate month options for 2025 (dataset range)
 function getMonthOptions(): { value: string; label: string }[] {
-  const options: { value: string; label: string }[] = [
-    { value: "", label: "All Time" },
-  ];
+  const options: { value: string; label: string }[] = [];
 
-  // Generate all months of 2025
   for (let month = 11; month >= 0; month--) {
     const date = new Date(2025, month, 1);
     const value = `2025-${String(month + 1).padStart(2, "0")}`;
@@ -37,6 +34,7 @@ function getMonthOptions(): { value: string; label: string }[] {
 }
 
 const MONTH_OPTIONS = getMonthOptions();
+const DEFAULT_MONTH = MONTH_OPTIONS[0].value; // Most recent month
 
 // Map location names from API to coordinates (aggregates duplicates)
 function mapLocationsToCoords(
@@ -68,10 +66,10 @@ function mapLocationsToCoords(
 
 function DashboardPage() {
   const { user } = useAuth();
-  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState(DEFAULT_MONTH);
 
   // Convert month to API date format
-  const dateFilter = selectedMonth ? `${selectedMonth}-01` : undefined;
+  const dateFilter = `${selectedMonth}-01`;
 
   // Table data - paginated for display
   const {
@@ -83,7 +81,7 @@ function DashboardPage() {
 
   // Stats data - from dedicated endpoint
   const { stats, isLoading: statsLoading } = useStats({
-    month: selectedMonth || undefined,
+    month: selectedMonth,
     topLimit: 10,
   });
 
@@ -100,10 +98,8 @@ function DashboardPage() {
     [stats?.topLocations]
   );
 
-  // Get display label for selected month
-  const selectedMonthLabel = selectedMonth
-    ? MONTH_OPTIONS.find((o) => o.value === selectedMonth)?.label ?? "Selected Month"
-    : "All Time";
+  const selectedMonthLabel =
+    MONTH_OPTIONS.find((o) => o.value === selectedMonth)?.label ?? selectedMonth;
 
   const isLoading = tableLoading || statsLoading;
 
