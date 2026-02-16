@@ -23,6 +23,7 @@ export interface LocationAggregation {
 interface ViolationMapProps {
   locations: LocationAggregation[];
   isLoading?: boolean;
+  focusCoords?: [number, number] | null;
 }
 
 function MapController({ onZoomChange }: { onZoomChange: (z: number) => void }) {
@@ -43,6 +44,24 @@ function MapController({ onZoomChange }: { onZoomChange: (z: number) => void }) 
       map.off("zoomend", handleZoom);
     };
   }, [map, onZoomChange]);
+
+  return null;
+}
+
+function MapFocus({
+  coords,
+}: {
+  coords?: [number, number] | null;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (coords) {
+      map.flyTo(coords, 13, { duration: 0.8 });
+    } else {
+      map.flyTo(MAP_CENTER, 11, { duration: 0.8 });
+    }
+  }, [map, coords]);
 
   return null;
 }
@@ -131,7 +150,7 @@ function getMarkerColor(count: number): string {
   return "#2563eb";
 }
 
-export function ViolationMap({ locations, isLoading }: ViolationMapProps) {
+export function ViolationMap({ locations, isLoading, focusCoords }: ViolationMapProps) {
   const [zoom, setZoom] = useState(11);
   const showHeatmap = zoom > HEATMAP_ZOOM_THRESHOLD;
 
@@ -155,6 +174,7 @@ export function ViolationMap({ locations, isLoading }: ViolationMapProps) {
         scrollWheelZoom={true}
       >
         <MapController onZoomChange={setZoom} />
+        <MapFocus coords={focusCoords} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
