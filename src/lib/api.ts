@@ -7,6 +7,7 @@ import type {
   StatsFilters,
   ApprehensionInput,
   ApprehensionResponse,
+  BulkImportResponse,
 } from "@/types/apprehension";
 import type {
   TrendsFilters,
@@ -153,6 +154,13 @@ export async function createApprehension(
   input: ApprehensionInput
 ): Promise<ApprehensionResponse> {
   const { data } = await api.post("/apprehensions", input);
+  return data;
+}
+
+export async function bulkImportApprehensions(
+  records: ApprehensionInput[]
+): Promise<BulkImportResponse> {
+  const { data } = await api.post("/apprehensions/bulk", { records });
   return data;
 }
 

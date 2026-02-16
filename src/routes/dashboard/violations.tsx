@@ -6,6 +6,7 @@ import {
   ViolationFormModal,
   ViolationDetailModal,
   DeleteConfirmDialog,
+  ImportModal,
 } from "@/components/dashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +23,7 @@ import {
   updateApprehension,
   deleteApprehension,
 } from "@/lib/api";
-import { Plus, Search, X } from "lucide-react";
+import { Plus, Search, X, Upload } from "lucide-react";
 import type { Apprehension, ApprehensionInput } from "@/types/apprehension";
 
 export const Route = createFileRoute("/dashboard/violations")({
@@ -39,6 +40,7 @@ function ViolationLogsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<Apprehension | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -154,10 +156,16 @@ function ViolationLogsPage() {
               Manage and track all violation records
             </p>
           </div>
-          <Button onClick={handleCreate}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Record
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              Import
+            </Button>
+            <Button onClick={handleCreate}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Record
+            </Button>
+          </div>
         </div>
 
         {/* Error Message */}
@@ -256,6 +264,12 @@ function ViolationLogsPage() {
         isLoading={isSubmitting}
         title="Delete Violation Record"
         description={`Are you sure you want to delete case #${selectedRecord?.caseNumber}? This action cannot be undone.`}
+      />
+
+      <ImportModal
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        onComplete={refetch}
       />
     </DashboardLayout>
   );

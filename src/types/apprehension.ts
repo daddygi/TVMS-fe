@@ -100,3 +100,17 @@ export interface ApprehensionInput {
 export interface ApprehensionResponse {
   data: Apprehension;
 }
+
+export interface BulkImportError {
+  row: number;
+  error: string;
+}
+
+export interface BulkImportResponse {
+  data: {
+    total: number;
+    imported: number;
+    failed: number;
+    errors: BulkImportError[];
+  };
+}

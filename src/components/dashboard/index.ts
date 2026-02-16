@@ -7,3 +7,4 @@ export { ViolationLogsTable } from "./violation-logs-table";
 export { ViolationFormModal } from "./violation-form-modal";
 export { ViolationDetailModal } from "./violation-detail-modal";
 export { DeleteConfirmDialog } from "./delete-confirm-dialog";
+export { ImportModal } from "./import-modal";
