@@ -128,6 +128,8 @@ export async function getApprehensions(
   if (filters.violation) params.append("violation", filters.violation);
   if (filters.plateNumber) params.append("plateNumber", filters.plateNumber);
   if (filters.driverName) params.append("driverName", filters.driverName);
+  if (filters.placeOfApprehension)
+    params.append("placeOfApprehension", filters.placeOfApprehension);
 
   const { data } = await api.get(`/apprehensions?${params.toString()}`);
   return data;

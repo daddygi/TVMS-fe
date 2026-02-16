@@ -52,6 +52,7 @@ export interface ApprehensionFilters {
   violation?: string;
   plateNumber?: string;
   driverName?: string;
+  placeOfApprehension?: string;
 }
 
 // Stats endpoint types
