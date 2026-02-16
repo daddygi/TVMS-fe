@@ -241,6 +241,8 @@ export async function getSummary(
   if (filters.dateTo) params.append("dateTo", filters.dateTo);
   if (filters.comparePrevious)
     params.append("comparePrevious", String(filters.comparePrevious));
+  if (filters.placeOfApprehension)
+    params.append("placeOfApprehension", filters.placeOfApprehension);
 
   const { data } = await api.get(`/analytics/summary?${params.toString()}`);
   return data;

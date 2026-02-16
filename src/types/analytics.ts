@@ -76,6 +76,7 @@ export interface SummaryFilters {
   dateFrom?: string;
   dateTo?: string;
   comparePrevious?: boolean;
+  placeOfApprehension?: string;
 }
 
 export interface SummaryPeriod {
